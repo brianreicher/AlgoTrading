@@ -32,7 +32,6 @@ def get_ticker_data(
 
     return dates, metric_dict
 
-
 def plot_ticker(metrics: tuple = None) -> None:
     plt.figure(figsize=(15, 10))
     dates, vals = metrics[0], metrics[1]
@@ -53,9 +52,33 @@ def plot_ticker(metrics: tuple = None) -> None:
     plt.show()
 
 
+def overlay_plot_tickers(ax, metrics: tuple = None, ticker: str = None) -> None:
+    dates, vals = metrics[0], metrics[1]
+
+    ax.plot(dates, vals["opens"], label="Open", marker="o")
+    ax.plot(dates, vals["highs"], label="High", marker="o")
+    ax.plot(dates, vals["lows"], label="Low", marker="o")
+    ax.plot(dates, vals["closes"], label="Close", marker="o")
+
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Values ($)")
+    ax.set_title(f"Monthly Prices Over Time: {dates[len(dates)-1]} - {dates[0]} ({ticker})")
+    ax.legend()
+    ax.tick_params(rotation=45)
+
+
+
 if __name__ == "__main__":
-    data: dict = fetch_monthly_adjusted(ticker="MSFT")
+    tickers: list[str] = ["MSFT", "AAPL", "GOOGL", "AMZN"]
 
-    metrics: tuple[list, dict] = get_ticker_data(data)
+    fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+    fig.suptitle("Monthly Prices Over Time for Different Tickers")
 
-    plot_ticker(metrics)
+    for i, ticker in enumerate(tickers):
+        data: dict = fetch_monthly_adjusted(ticker=ticker)
+        metrics: tuple[list, dict] = get_ticker_data(data)
+        row, col = divmod(i, 2)
+        overlay_plot_tickers(axes[row, col], metrics, ticker)
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
