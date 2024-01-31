@@ -34,7 +34,7 @@ def get_ticker_data(
 
 
 def plot_ticker(metrics: tuple = None) -> None:
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(15, 10))
     dates, vals = metrics[0], metrics[1]
 
     plt.plot(dates, vals["opens"], label="Open", marker="o")
@@ -44,8 +44,8 @@ def plot_ticker(metrics: tuple = None) -> None:
     # plt.bar(dates, vals["volumes"], label="Volume", alpha=0.5)
 
     plt.xlabel("Date")
-    plt.ylabel("Values")
-    plt.title("Monthly Prices and Volumes Over Time")
+    plt.ylabel("Values ($)")
+    plt.title(f"Monthly Prices and Volumes Over Time: {dates[len(dates)-1]} - {dates[0]}")
     plt.legend()
     plt.xticks(rotation=45)
     plt.tight_layout()
