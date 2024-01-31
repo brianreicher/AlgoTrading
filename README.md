@@ -1,6 +1,8 @@
 # AlgoTrading
 MATH4025 Applied Mathematics Capstone Project - Algorithmic Trading 
 
+Brian Reicher, Claire Pan
+
 
 <div align="center">
   <!-- Lint Actions -->
