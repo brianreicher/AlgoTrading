@@ -41,7 +41,7 @@ def plot_ticker(metrics: tuple = None) -> None:
     plt.plot(dates, vals["highs"], label="High", marker="o")
     plt.plot(dates, vals["lows"], label="Low", marker="o")
     plt.plot(dates, vals["closes"], label="Close", marker="o")
-    plt.bar(dates, vals["volumes"], label="Volume", alpha=0.5)
+    # plt.bar(dates, vals["volumes"], label="Volume", alpha=0.5)
 
     plt.xlabel("Date")
     plt.ylabel("Values")
