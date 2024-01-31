@@ -28,9 +28,9 @@ def get_ticker_data(
         values: list[float] = [
             float(time_series[date][f"{i+1}. {metric_name}"]) for date in dates
         ]
-        metric_dict[key] = values
+        metric_dict[key] = values[::-1]
 
-    return dates, metric_dict
+    return dates[::-1], metric_dict
 
 def plot_ticker(metrics: tuple = None) -> None:
     plt.figure(figsize=(15, 10))
