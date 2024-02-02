@@ -62,14 +62,14 @@ def overlay_plot_tickers(ax, metrics: tuple = None, ticker: str = None) -> None:
 
     ax.set_xlabel("Date")
     ax.set_ylabel("Values ($)")
-    ax.set_title(f"Monthly Prices Over Time: {dates[len(dates)-1]} - {dates[0]} ({ticker})")
+    ax.set_title(f"Monthly Prices Over Time: {dates[0]} - {dates[-1]} ({ticker})")
     ax.legend()
     ax.tick_params(rotation=45)
-
+    ax.set_xticks([])
 
 
 if __name__ == "__main__":
-    tickers: list[str] = ["MSFT", "AAPL", "GOOGL", "AMZN"]
+    tickers: list[str] = ["MSFT", "IBM", "NVDA", "TSLA"]
 
     fig, axes = plt.subplots(2, 2, figsize=(15, 10))
     fig.suptitle("Monthly Prices Over Time for Different Tickers")
