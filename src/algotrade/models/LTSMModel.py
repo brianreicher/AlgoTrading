@@ -16,5 +16,5 @@ class StockLSTM(nn.Module):
         h, c = torch.zeros(x.size(0), self.hidden_size), torch.zeros(x.size(0), self.hidden_size)
         for cell in self.cells:
             h, c = cell(x, (h, c))
-        out = self.fc(h)
+        out: torch.Tensor = self.fc(h)
         return out

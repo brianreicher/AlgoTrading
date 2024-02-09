@@ -6,8 +6,8 @@ import torch.optim as optim
 class LTSMCell(nn.Module):
     def __init__(self, input_size, hidden_size) -> None:
         super(LTSMCell, self).__init__()
-        self.input_size = input_size
-        self.hidden_size = hidden_size
+        self.input_size: int = input_size
+        self.hidden_size: int = hidden_size
         self.W_ih = nn.Parameter(torch.Tensor(input_size, 4 * hidden_size))
         self.W_hh = nn.Parameter(torch.Tensor(hidden_size, 4 * hidden_size))
         self.b_ih = nn.Parameter(torch.Tensor(4 * hidden_size))
@@ -30,6 +30,6 @@ class LTSMCell(nn.Module):
         forgetgate: torch.Tensor = torch.sigmoid(forgetgate)
         cellgate: torch.Tensor = torch.tanh(cellgate)
         outgate: torch.Tensor = torch.sigmoid(outgate)
-        c = (forgetgate * c) + (ingate * cellgate)
-        h = outgate * torch.tanh(c)
+        c: torch.Tensor = (forgetgate * c) + (ingate * cellgate)
+        h: torch.Tensor = outgate * torch.tanh(c)
         return h, c
