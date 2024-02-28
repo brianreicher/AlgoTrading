@@ -55,40 +55,6 @@ def get_ticker_data(
     return dates[::-1], metric_dict
 
 
-# directory where you want to save the CSV files
-output_directory = "data/"
-
-def save_to_csv(ticker: str, dates: list, metric_dict: dict) -> None:
-    """
-    save stock data to a CSV file.
-    args:
-        ticker (str): Ticker symbol of the stock.
-        dates (list): List of dates.
-        metric_dict (dict): Dictionary containing metric values.
-
-    returns:
-        none
-    """
-    file_name = os.path.join(output_directory, f"{ticker}_monthly_data.csv")
-    with open(file_name, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(["Date", "Open", "High", "Low", "Close", "Volume"])
-        for date, open_val, high_val, low_val, close_val, volume_val in zip(
-            dates, metric_dict["opens"], metric_dict["highs"], metric_dict["lows"],
-            metric_dict["closes"], metric_dict["volumes"]
-        ):
-            writer.writerow([date, open_val, high_val, low_val, close_val, volume_val])
-
-
-if __name__ == "__main__":
-    tickers: list[str] = ["MSFT", "IBM", "NVDA", "TSLA"]
-
-    for ticker in tickers:
-        data: dict = fetch_monthly_adjusted(ticker=ticker)
-        dates, metric_dict = get_ticker_data(data)
-        save_to_csv(ticker, dates, metric_dict)
-
-
 def plot_ticker(metrics: tuple = None) -> None:
     plt.figure(figsize=(15, 10))
     # Extract dates and metric values from the input tuple
