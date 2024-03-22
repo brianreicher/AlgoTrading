@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import matplotlib.pyplot as plt
 import csv
 
+# get api
 load_dotenv()
 key: str = os.environ.get("ALPHAVANTAGE_KEY")
 
@@ -69,4 +70,5 @@ if __name__ == "__main__":
 
     for ticker in tickers:
         data: dict = fetch_monthly_adjusted(ticker=ticker)
-
+        # dates, metric_dict = get_ticker_data(data)
+        # save_to_csv(ticker, dates, metric_dict)
