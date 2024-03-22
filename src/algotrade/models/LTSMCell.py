@@ -15,14 +15,16 @@ class LTSMCell(nn.Module):
         self.init_weights()
 
     def init_weights(self) -> None:
-        std: float = 1.0 / (self.hidden_size ** 0.5)
+        std: float = 1.0 / (self.hidden_size**0.5)
         for weight in self.parameters():
             nn.init.uniform_(weight, -std, std)
 
     def forward(self, input, hx=None) -> tuple[torch.Tensor]:
         if hx is None:
-            hx: tuple[torch.Tensor, torch.Tensor] = (torch.zeros(input.size(0), self.hidden_size),
-                  torch.zeros(input.size(0), self.hidden_size))
+            hx: tuple[torch.Tensor, torch.Tensor] = (
+                torch.zeros(input.size(0), self.hidden_size),
+                torch.zeros(input.size(0), self.hidden_size),
+            )
         h, c = hx
         gates = input.matmul(self.W_ih) + h.matmul(self.W_hh) + self.b_ih + self.b_hh
         ingate, forgetgate, cellgate, outgate = gates.chunk(4, 1)

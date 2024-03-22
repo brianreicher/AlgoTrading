@@ -9,11 +9,18 @@ class StockLSTM(nn.Module):
         super(StockLSTM, self).__init__()
         self.hidden_size: int = hidden_size
         self.num_layers: int = num_layers
-        self.cells: nn.ModuleList = nn.ModuleList([LTSMCell(input_size if i == 0 else hidden_size, hidden_size) for i in range(num_layers)])
+        self.cells: nn.ModuleList = nn.ModuleList(
+            [
+                LTSMCell(input_size if i == 0 else hidden_size, hidden_size)
+                for i in range(num_layers)
+            ]
+        )
         self.fc: nn.Linear = nn.Linear(hidden_size, output_size)
 
     def forward(self, x) -> torch.Tensor:
-        h, c = torch.zeros(x.size(0), self.hidden_size), torch.zeros(x.size(0), self.hidden_size)
+        h, c = torch.zeros(x.size(0), self.hidden_size), torch.zeros(
+            x.size(0), self.hidden_size
+        )
         for cell in self.cells:
             h, c = cell(x, (h, c))
         out: torch.Tensor = self.fc(h)
