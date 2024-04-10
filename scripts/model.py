@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import torch
 import torch.nn as nn
@@ -41,6 +42,55 @@ class LSTM(nn.Module):
         out, _ = self.lstm(x, (h0, c0))
         out = self.fc(out[:, -1, :])
         return out
+
+class ComplexLSTM(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, output_size, bidirectional=False, dropout=0.0):
+        super(ComplexLSTM, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.bidirectional = bidirectional
+        self.dropout = dropout
+        
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, bidirectional=bidirectional, dropout=dropout if dropout > 0 else 0)
+        self.fc = nn.Linear(hidden_size * (2 if bidirectional else 1), output_size)
+        self.dropout_layer = nn.Dropout(dropout)
+
+    def forward(self, x):
+        h0 = self.init_hidden(x.size(0)).to(x.device)
+        out, _ = self.lstm(x, h0)
+        out = self.dropout_layer(out[:, -1, :])
+        out = self.fc(out)
+        return out
+
+    def init_hidden(self, batch_size):
+        num_directions = 2 if self.bidirectional else 1
+        return (torch.zeros(self.num_layers * num_directions, batch_size, self.hidden_size),
+                torch.zeros(self.num_layers * num_directions, batch_size, self.hidden_size))
+
+    def save_checkpoint(self, checkpoint_path):
+        torch.save({
+            'model_state_dict': self.state_dict(),
+        }, checkpoint_path)
+
+    def load_checkpoint(self, checkpoint_path):
+        checkpoint = torch.load(checkpoint_path)
+        self.load_state_dict(checkpoint['model_state_dict'])
+
+    def predict(self, input_data):
+        with torch.no_grad():
+            self.eval()
+            output = self.forward(input_data)
+            return output
+
+    def evaluate(self, dataloader, criterion):
+        self.eval()
+        total_loss = 0.0
+        with torch.no_grad():
+            for batch_X, batch_y in dataloader:
+                output = self.forward(batch_X)
+                loss = criterion(output, batch_y)
+                total_loss += loss.item() * batch_X.size(0)
+        return total_loss / len(dataloader.dataset)
 
 def plot_loss_live(writer, epoch, loss):
     writer.add_scalar('Loss/train', loss, epoch)
