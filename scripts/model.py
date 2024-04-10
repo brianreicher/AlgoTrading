@@ -1,8 +1,8 @@
-#%%
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.tensorboard import SummaryWriter
 
 
 dates =  np.load("training_dates.npz")["arr_0"]
@@ -42,6 +42,17 @@ class LSTM(nn.Module):
         out = self.fc(out[:, -1, :])
         return out
 
+def plot_loss_live(writer, epoch, loss):
+    writer.add_scalar('Loss/train', loss, epoch)
+
+def predict_future_metrics(model, input_data, num_future_months, min_vals, max_vals):
+    predicted_metrics = []
+    for _ in range(num_future_months):
+        with torch.no_grad():
+            predicted = model(input_data)
+            predicted_metrics.append(predicted.squeeze().numpy() * (max_vals - min_vals) + min_vals)
+            input_data = torch.cat((input_data[:, 1:, :], predicted.unsqueeze(1)), dim=1)
+    return np.array(predicted_metrics)
 
 input_size = 5
 hidden_size = 64
@@ -52,6 +63,7 @@ model = LSTM(input_size, hidden_size, num_layers, output_size)
 
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+writer = SummaryWriter()
 
 
 num_epochs = 50
@@ -69,15 +81,14 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
 
-    # if (epoch+1) % 10 == 0:
+    plot_loss_live(writer, epoch, loss.item())
     print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.7f}')
 
-
+n_months = 3
 input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)
-with torch.no_grad():
-    predicted = model(input_data)
-    predicted_metrics = predicted.squeeze().numpy() * (max_vals - min_vals) + min_vals
+predicted_metrics = predict_future_metrics(model, input_data, n_months, min_vals, max_vals)
 
-print("Predicted metrics for the next month:", predicted_metrics)
+print(f"Predicted metrics for the next {n_months} month(s):\n")
+print(predicted_metrics)
+writer.close()
 
-# %%
