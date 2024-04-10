@@ -54,7 +54,7 @@ criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 
-num_epochs = 1000
+num_epochs = 50
 batch_size = 4
 dataset = TensorDataset(X, y)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
@@ -70,10 +70,10 @@ for epoch in range(num_epochs):
         optimizer.step()
 
     if (epoch+1) % 10 == 0:
-        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
+        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.7f}')
 
 
-input_data = metrics[-seq_length:].reshape(1, seq_length, input_size)
+input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)
 with torch.no_grad():
     predicted = model(input_data)
     predicted_metrics = predicted.squeeze().numpy() * (max_vals - min_vals) + min_vals
