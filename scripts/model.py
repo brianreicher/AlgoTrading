@@ -54,7 +54,7 @@ class LSTM(nn.Module):
         self.load_state_dict(checkpoint['model_state_dict'])
 
 class ComplexLSTM(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, output_size, bidirectional=False, dropout=0.0):
+    def __init__(self, input_size, hidden_size, num_layers, output_size, bidirectional=True, dropout=0.03):
         super(ComplexLSTM, self).__init__()
         self.hidden_size = hidden_size
         self.num_layers = num_layers
@@ -140,8 +140,8 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 writer = SummaryWriter()
 
 
-num_epochs = 500
-batch_size = 4
+num_epochs = 1000
+batch_size = 16
 dataset = TensorDataset(X, y)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
