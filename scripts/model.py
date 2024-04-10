@@ -104,6 +104,19 @@ def predict_future_metrics(model, input_data, num_future_months, min_vals, max_v
             input_data = torch.cat((input_data[:, 1:, :], predicted.unsqueeze(1)), dim=1)
     return np.array(predicted_metrics)
 
+def plot_future_data(dates, predicted_metrics, n_months):
+    plt.figure(figsize=(10, 6))
+    plt.title(f"Predicted Metrics for the Next {n_months} Months")
+    plt.xlabel("Date")
+    plt.ylabel("Metrics")
+    for i in range(predicted_metrics.shape[1]):
+        plt.plot(dates[-1] + np.arange(1, n_months + 1), predicted_metrics[:, i], label=f"Metric {i+1}")
+    plt.legend()
+    plt.grid(True)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
 input_size = 5
 hidden_size = 64
 num_layers = 2
@@ -140,5 +153,8 @@ predicted_metrics = predict_future_metrics(model, input_data, n_months, min_vals
 
 print(f"Predicted metrics for the next {n_months} month(s):\n")
 print(predicted_metrics)
+
+plot_future_data(dates, predicted_metrics, n_months)
+
 writer.close()
 

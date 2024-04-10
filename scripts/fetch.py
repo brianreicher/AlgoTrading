@@ -82,7 +82,7 @@ def calculate_directionality(metrics) -> list:
 
 if __name__ == "__main__":
     tech_stocks: list = ["MSFT", "IBM", "NVDA", "CRM", "AAPL", "GOOGL", "AMZN", "INTC", "CSCO", "ADBE"]
-    finance_tickers: list = ["JPM", "BAC", "WFC", "GS", "C", "MS", "AXP", "USB", "BLK", "PNC"]
+    finance_stocks: list = ["JPM", "BAC", "WFC", "GS", "C", "MS", "AXP", "USB", "BLK", "PNC"]
     healthcare_stocks: list = ["JNJ", "PFE", "UNH", "MRK", "ABBV", "AMGN", "LLY", "BMY", "CVS", "MDT"]
     consumer_goods_stocks: list = ["PG", "KO", "PEP", "MO", "MCD", "NKE", "CL", "KHC", "WMT", "HD"]
     energy_stocks: list = ["XOM", "CVX", "RDS-A", "BP", "TOT", "COP", "SLB", "EOG", "PTR", "KMI"]
