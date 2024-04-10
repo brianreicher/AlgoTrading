@@ -5,6 +5,8 @@ import os
 from dotenv import load_dotenv
 import matplotlib.pyplot as plt
 import csv
+import numpy as np
+
 
 # get api
 load_dotenv()
@@ -26,17 +28,17 @@ def fetch_monthly_adjusted(ticker: str = "IBM") -> dict:
     r: requests.Response = requests.get(url)
     response_data: list = r.json()["Monthly Time Series"]
 
-    # url: str = f"https://www.alphavantage.co/query?function=EMA&symbol={ticker}&interval=monthly&time_period=10&series_type=open&apikey={key}"
-    # r: requests.Response = requests.get(url)
-    # response_data_ema: list = r.json()["Technical Analysis: EMA"]
+    url: str = f"https://www.alphavantage.co/query?function=EMA&symbol={ticker}&interval=monthly&time_period=10&series_type=open&apikey={key}"
+    r: requests.Response = requests.get(url)
+    response_data_ema: list = r.json()["Technical Analysis: EMA"]
 
-    # url: str = f"https://www.alphavantage.co/query?function=KAMA&symbol={ticker}&interval=monthly&time_period=10&series_type=open&apikey={key}"
-    # r: requests.Response = requests.get(url)
-    # response_data_kama: list = r.json()["Technical Analysis: KAMA"]
+    url: str = f"https://www.alphavantage.co/query?function=KAMA&symbol={ticker}&interval=monthly&time_period=10&series_type=open&apikey={key}"
+    r: requests.Response = requests.get(url)
+    response_data_kama: list = r.json()["Technical Analysis: KAMA"]
 
-    # url: str = f"https://www.alphavantage.co/query?function=MAMA&symbol={ticker}&interval=monthly&time_period=10&series_type=open&apikey={key}"
-    # r: requests.Response = requests.get(url)
-    # response_data_mama: list = r.json()["Technical Analysis: MAMA"]
+    url: str = f"https://www.alphavantage.co/query?function=MAMA&symbol={ticker}&interval=monthly&time_period=10&series_type=open&apikey={key}"
+    r: requests.Response = requests.get(url)
+    response_data_mama: list = r.json()["Technical Analysis: MAMA"]
 
 
     dates: list = list(response_data.keys())[::-1]
@@ -60,15 +62,46 @@ def fetch_monthly_adjusted(ticker: str = "IBM") -> dict:
             #     pass
         metrics.append(date_mets)
 
-    print(dates[0], metrics[0])
+    return dates, metrics
 
 
+def calculate_directionality(metrics) -> list:
+    """
+    Calculate directionality based on monthly open, close, high, low, and volume.
 
+    Returns:
+    float: Directionality value.
+    """
+    directionalities: list = []
+    for i, m in enumerate(metrics):
+        price_difference: float = m[3] - m[0]
+        normalized_difference: float = price_difference / (m[1] - m[2])
+        directionality: float = normalized_difference * m[4]
+        directionalities.append(directionality)
+
+    return directionalities
+
+def save_to_csv(dates, stock_metrics, filename) -> None:
+    with open(filename, 'w', newline='') as csvfile:
+        csv_writer = csv.writer(csvfile)
+        
+        headers: list[str] = ['Date', 'M1', 'M2', 'M3', 'M4', 'M5']
+        csv_writer.writerow(headers)
+        
+        for date, metrics in zip(dates, stock_metrics):
+            row = [date] + metrics
+            csv_writer.writerow(row)
 
 if __name__ == "__main__":
     tickers: list[str] = ["MSFT"] #, "IBM", "NVDA", "CRM"]
 
-    for ticker in tickers:
-        data: dict = fetch_monthly_adjusted(ticker=ticker)
-        # dates, metric_dict = get_ticker_data(data)
-        # save_to_csv(ticker, dates, metric_dict)
+    # for ticker in tickers:
+    #     dates, metrics = fetch_monthly_adjusted(ticker=ticker)
+    #     np.savez("./date", dates)
+    #     np.savez("./metrics", metrics)
+        # yVec: list = calculate_directionality(metrics)
+    x = np.load("date.npz")["arr_0"]
+    print(x, len(x))
+
+
+# %%
