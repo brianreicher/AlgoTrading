@@ -1,5 +1,3 @@
-# imports
-# %%
 import requests
 import os
 from dotenv import load_dotenv
@@ -83,18 +81,25 @@ def calculate_directionality(metrics) -> list:
 
 
 if __name__ == "__main__":
-    tickers = ["MSFT", "IBM", "NVDA", "CRM", "AAPL", "GOOGL", "AMZN", "INTC", "CSCO", "ADBE"]
+    tech_stocks: list = ["MSFT", "IBM", "NVDA", "CRM", "AAPL", "GOOGL", "AMZN", "INTC", "CSCO", "ADBE"]
+    finance_tickers: list = ["JPM", "BAC", "WFC", "GS", "C", "MS", "AXP", "USB", "BLK", "PNC"]
+    healthcare_stocks: list = ["JNJ", "PFE", "UNH", "MRK", "ABBV", "AMGN", "LLY", "BMY", "CVS", "MDT"]
+    consumer_goods_stocks: list = ["PG", "KO", "PEP", "MO", "MCD", "NKE", "CL", "KHC", "WMT", "HD"]
+    energy_stocks: list = ["XOM", "CVX", "RDS-A", "BP", "TOT", "COP", "SLB", "EOG", "PTR", "KMI"]
 
-    full_dates: list = []
-    full_metrics: list = []
+    tickers: dict = {"tech": tech_stocks, "finance": finance_stocks, "healthcare":healthcare_stocks, "consumer_goods":consumer_goods_stocks, "energy":energy_stocks}
 
-    for ticker in tickers:
-        dates, metrics = fetch_monthly_adjusted(ticker=ticker)
-        full_dates.extend(dates)
-        full_metrics.extend(metrics)
 
-    np.savez("./training_dates", full_dates)
-    np.savez("./training_metrics", full_metrics)
+    for sector, data in tickers:
+        full_dates: list = []
+        full_metrics: list = []
+        for ticker in data:
+            dates, metrics = fetch_monthly_adjusted(ticker=ticker)
+            full_dates.extend(dates)
+            full_metrics.extend(metrics)
+
+        np.savez(f"./{sector}_training_dates", full_dates)
+        np.savez(f"./{sector}_training_metrics", full_metrics)
 
 
 
