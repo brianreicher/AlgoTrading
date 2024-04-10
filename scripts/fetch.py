@@ -1,8 +1,6 @@
 import requests
 import os
 from dotenv import load_dotenv
-import matplotlib.pyplot as plt
-import csv
 import numpy as np
 
 
@@ -90,7 +88,7 @@ if __name__ == "__main__":
     tickers: dict = {"tech": tech_stocks, "finance": finance_stocks, "healthcare":healthcare_stocks, "consumer_goods":consumer_goods_stocks, "energy":energy_stocks}
 
 
-    for sector, data in tickers:
+    for sector, data in tickers.items():
         full_dates: list = []
         full_metrics: list = []
         for ticker in data:

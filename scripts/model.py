@@ -2,6 +2,7 @@ import os
 import numpy as np
 import torch
 import torch.nn as nn
+import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader, TensorDataset
 from torch.utils.tensorboard import SummaryWriter
 
@@ -42,6 +43,15 @@ class LSTM(nn.Module):
         out, _ = self.lstm(x, (h0, c0))
         out = self.fc(out[:, -1, :])
         return out
+    
+    def save_checkpoint(self, checkpoint_path):
+        torch.save({
+            'model_state_dict': self.state_dict(),
+        }, checkpoint_path)
+
+    def load_checkpoint(self, checkpoint_path):
+        checkpoint = torch.load(checkpoint_path)
+        self.load_state_dict(checkpoint['model_state_dict'])
 
 class ComplexLSTM(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, output_size, bidirectional=False, dropout=0.0):
@@ -109,8 +119,9 @@ def plot_future_data(dates, predicted_metrics, n_months):
     plt.title(f"Predicted Metrics for the Next {n_months} Months")
     plt.xlabel("Date")
     plt.ylabel("Metrics")
-    for i in range(predicted_metrics.shape[1]):
-        plt.plot(dates[-1] + np.arange(1, n_months + 1), predicted_metrics[:, i], label=f"Metric {i+1}")
+    metrics = ["open", "high", "low", "close"]
+    for i in range(predicted_metrics.shape[1]-1):
+        plt.plot(dates[-1] + np.arange(1, n_months + 1), predicted_metrics[:, i], label=metrics[i+1])
     plt.legend()
     plt.grid(True)
     plt.xticks(rotation=45)
@@ -145,9 +156,13 @@ for epoch in range(num_epochs):
         optimizer.step()
 
     plot_loss_live(writer, epoch, loss.item())
+
+    if epoch%100==0:
+        model.save_checkpoint(f"./LTSM_{epoch}")
+
     print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.7f}')
 
-n_months = 3
+n_months = 36
 input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)
 predicted_metrics = predict_future_metrics(model, input_data, n_months, min_vals, max_vals)
 
