@@ -66,7 +66,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 writer = SummaryWriter()
 
 
-num_epochs = 50
+num_epochs = 500
 batch_size = 4
 dataset = TensorDataset(X, y)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
