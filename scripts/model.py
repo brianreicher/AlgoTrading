@@ -5,9 +5,9 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 
 
-dates =  np.load("date.npz")["arr_0"]
+dates =  np.load("training_dates.npz")["arr_0"]
 dates = np.array([np.datetime64(date) for date in dates])
-metrics = np.load("metrics.npz")["arr_0"]
+metrics = np.load("training_metrics.npz")["arr_0"]
 
 
 min_vals = np.min(metrics, axis=0)
@@ -69,8 +69,8 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
 
-    if (epoch+1) % 10 == 0:
-        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.7f}')
+    # if (epoch+1) % 10 == 0:
+    print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.7f}')
 
 
 input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)

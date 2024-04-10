@@ -83,7 +83,7 @@ def calculate_directionality(metrics) -> list:
 
 
 if __name__ == "__main__":
-    tickers: list[str] = ["MSFT", "IBM", "NVDA", "CRM"]
+    tickers = ["MSFT", "IBM", "NVDA", "CRM", "AAPL", "GOOGL", "AMZN", "INTC", "CSCO", "ADBE"]
 
     full_dates: list = []
     full_metrics: list = []
@@ -93,8 +93,8 @@ if __name__ == "__main__":
         full_dates.extend(dates)
         full_metrics.extend(metrics)
 
-    np.savez("./dates", full_dates)
-    np.savez("./metrics", full_metrics)
+    np.savez("./training_dates", full_dates)
+    np.savez("./training_metrics", full_metrics)
 
 
 
