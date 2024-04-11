@@ -121,7 +121,7 @@ def plot_future_data(dates, predicted_metrics, n_months):
     plt.ylabel("Metrics")
     metrics = ["open", "high", "low", "close"]
     for i in range(predicted_metrics.shape[1]-1):
-        plt.plot(dates[-1] + np.arange(1, n_months + 1), predicted_metrics[:, i], label=metrics[i+1])
+        plt.plot(dates[-1] + np.arange(1, n_months + 1), predicted_metrics[:, i], label=metrics[i])
     plt.legend()
     plt.grid(True)
     plt.xticks(rotation=45)
@@ -145,24 +145,28 @@ batch_size = 16
 dataset = TensorDataset(X, y)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-for epoch in range(num_epochs):
-    for batch_X, batch_y in dataloader:
-        outputs = model(batch_X)
+train: bool = False
 
-        loss = criterion(outputs, batch_y)
+if train:
+    for epoch in range(num_epochs):
+        for batch_X, batch_y in dataloader:
+            outputs = model(batch_X)
 
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+            loss = criterion(outputs, batch_y)
 
-    plot_loss_live(writer, epoch, loss.item())
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-    if epoch%100==0:
-        model.save_checkpoint(f"./LTSM_{epoch}")
+        plot_loss_live(writer, epoch, loss.item())
 
-    print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.7f}')
+        if epoch+1%100==0:
+            model.save_checkpoint(f"./LTSM__checkpoint_{epoch}")
 
-n_months = 36
+        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.7f}')
+
+n_months = 12*6
+model.load_checkpoint("./LTSM_900")
 input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)
 predicted_metrics = predict_future_metrics(model, input_data, n_months, min_vals, max_vals)
 
