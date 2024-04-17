@@ -1,8 +1,10 @@
+#%%
 import os
 import numpy as np
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
+from collections import defaultdict
 from torch.utils.data import DataLoader, TensorDataset
 from torch.utils.tensorboard import SummaryWriter
 
@@ -11,6 +13,20 @@ dates =  np.load("healthcare_training_dates.npz")["arr_0"]
 dates = np.array([np.datetime64(date) for date in dates])
 metrics = np.load("healthcare_training_metrics.npz")["arr_0"]
 
+def average_metric_arrays(dates, nested_arrays):# -> list:
+    date_to_arrays = defaultdict(list)
+
+    for date, array in zip(dates, nested_arrays):
+        date_to_arrays[date].append(array)
+
+    averaged_results = []
+    for date, arrays in date_to_arrays.items():
+        averaged_array = [sum(x) / len(x) for x in zip(*arrays)]
+        averaged_results.append(averaged_array)
+
+    return averaged_results
+
+metrics = np.array(average_metric_arrays(dates, metrics))
 
 min_vals = np.min(metrics, axis=0)
 max_vals = np.max(metrics, axis=0)
@@ -27,7 +43,7 @@ for i in range(len(metrics) - seq_length):
     y.append(metrics_tensor[i+seq_length])
 X = torch.stack(X)
 y = torch.stack(y)
-
+print(X, y)
 
 class LSTM(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, output_size):
@@ -56,14 +72,20 @@ class LSTM(nn.Module):
 def plot_loss_live(writer, epoch, loss):
     writer.add_scalar('Loss/train', loss, epoch)
 
-def predict_future_metrics(model, input_data, num_future_months, min_vals, max_vals):
+def predict_metrics(model, input_data, num_future_months, min_vals, max_vals, future=True):
     predicted_metrics = []
-    for _ in range(num_future_months):
+    if future:
+        for _ in range(num_future_months):
+            with torch.no_grad():
+                predicted = model(input_data)
+                predicted_metrics.append(predicted.squeeze().numpy() * (max_vals - min_vals) + min_vals)
+                input_data = torch.cat((input_data[:, 1:, :], predicted.unsqueeze(1)), dim=1)
+    else:
         with torch.no_grad():
             predicted = model(input_data)
             predicted_metrics.append(predicted.squeeze().numpy() * (max_vals - min_vals) + min_vals)
-            input_data = torch.cat((input_data[:, 1:, :], predicted.unsqueeze(1)), dim=1)
     return np.array(predicted_metrics)
+
 
 def plot_future_data(dates, predicted_metrics, n_months, sector):
     plt.figure(figsize=(10, 6))
@@ -92,7 +114,7 @@ writer = SummaryWriter()
 
 
 num_epochs = 301
-batch_size = 16
+batch_size = 2
 dataset = TensorDataset(X, y)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
@@ -120,8 +142,16 @@ n_months = 12*3
 # model.load_checkpoint("./LTSM_300") # tech
 # model.load_checkpoint("./LTSM_checkpoint_finance_300") # finance
 model.load_checkpoint("./LTSM_checkpoint_healthcare_300")
+
+# predict future metrics
 input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)
-predicted_metrics = predict_future_metrics(model, input_data, n_months, min_vals, max_vals)
+predicted_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
+
+# predict past metrics
+n_past_months = 12
+input_data = metrics_tensor[-seq_length*10:].reshape(1, seq_length, input_size)
+predicted_past_metrics = predict_metrics(model, input_data, n_past_months, min_vals, max_vals)
+
 
 print(f"Predicted metrics for the next {n_months} month(s):\n")
 print(predicted_metrics)
@@ -130,3 +160,5 @@ plot_future_data(dates, predicted_metrics, n_months, "Healthcare")
 
 writer.close()
 
+
+# %%
