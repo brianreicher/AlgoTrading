@@ -151,36 +151,53 @@ def plot_metrics_ytd(ms, sector) -> None:
     plt.xticks(rotation=45)
 
     plt.xlabel("Past 12 Months")
-    plt.ylabel("Metric Values")
+    plt.ylabel("Metric Values ($)")
     plt.title(f"YTD {sector} Metrics")
     plt.legend()
     plt.grid(True)
     plt.show()
 
 dates, metrics = parse_dates_metrics("training_dates.npz", "training_metrics.npz")
+min_vals = np.min(metrics, axis=0)
+max_vals = np.max(metrics, axis=0)
 model.load_checkpoint("./LTSM_checkpoint_tech_300") # tech
 input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)
 predicted_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
 print(f"Predicted metrics for the past {n_months} month(s):\n")
 plot_future_data(dates, predicted_metrics, n_months, "Tech")
 plot_metrics_ytd(metrics[-12:], "Tech")
+# predicted past YTD metrics
+input_data = metrics_tensor[-22:-12].reshape(1, seq_length, input_size)
+predicted_metrics = predict_metrics(model, input_data, 12, min_vals, max_vals)
+plot_metrics_ytd(predicted_metrics, "Tech Backtest YTD")
 
 dates, metrics = parse_dates_metrics("healthcare_training_dates.npz", "healthcare_training_metrics.npz")
+min_vals = np.min(metrics, axis=0)
+max_vals = np.max(metrics, axis=0)
 model.load_checkpoint("./LTSM_checkpoint_healthcare_300")
 input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)
 predicted_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
 print(f"Predicted metrics for the past {n_months} month(s):\n")
 plot_future_data(dates, predicted_metrics, n_months, "Healthcare")
 plot_metrics_ytd(metrics[-12:], "Healthcare")
+# predicted past YTD metrics
+input_data = metrics_tensor[-22:-12].reshape(1, seq_length, input_size)
+predicted_metrics = predict_metrics(model, input_data, 12, min_vals, max_vals)
+plot_metrics_ytd(predicted_metrics, "Healthcare Backtest YTD")
 
 dates, metrics = parse_dates_metrics("finance_training_dates.npz", "finance_training_metrics.npz")
+min_vals = np.min(metrics, axis=0)
+max_vals = np.max(metrics, axis=0)
 model.load_checkpoint("./LTSM_checkpoint_finance_300") # finance
 input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)
 predicted_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
 print(f"Predicted metrics for the past {n_months} month(s):\n")
 plot_future_data(dates, predicted_metrics, n_months, "Finance")
 plot_metrics_ytd(metrics[-12:], "Finance")
-
+# predicted past YTD metrics
+input_data = metrics_tensor[-22:-12].reshape(1, seq_length, input_size)
+predicted_metrics = predict_metrics(model, input_data, 12, min_vals, max_vals)
+plot_metrics_ytd(predicted_metrics, "Finance Backtest YTD")
 
 # predict past metrics
 # input_data = metrics_tensor[-22:-12].reshape(1, seq_length, input_size)
