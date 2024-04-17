@@ -9,10 +9,6 @@ from torch.utils.data import DataLoader, TensorDataset
 from torch.utils.tensorboard import SummaryWriter
 
 
-dates =  np.load("healthcare_training_dates.npz")["arr_0"]
-dates = np.array([np.datetime64(date) for date in dates])
-metrics = np.load("healthcare_training_metrics.npz")["arr_0"]
-
 def average_metric_arrays(dates, nested_arrays)-> list:
     date_to_arrays = defaultdict(list)
 
@@ -26,8 +22,16 @@ def average_metric_arrays(dates, nested_arrays)-> list:
 
     return averaged_results
 
-metrics = np.array(average_metric_arrays(dates, metrics))
+def parse_dates_metrics(dates_file, metrics_file)-> tuple:
+    dates =  np.load(dates_file)["arr_0"]
+    dates = np.array([np.datetime64(date) for date in dates])
+    metrics = np.load(metrics_file)["arr_0"]
+    metrics = np.array(average_metric_arrays(dates, metrics))
+    return dates, metrics
 
+
+
+dates, metrics = parse_dates_metrics("finance_training_dates.npz", "finance_training_metrics.npz")
 min_vals = np.min(metrics, axis=0)
 max_vals = np.max(metrics, axis=0)
 metrics = (metrics - min_vals) / (max_vals - min_vals)
@@ -82,15 +86,14 @@ def predict_metrics(model, input_data, num_future_months, min_vals, max_vals) ->
 
     return np.array(predicted_metrics)
 
-
 def plot_future_data(dates, predicted_metrics, n_months, sector):
     plt.figure(figsize=(10, 6))
     plt.title(f"Predicted {sector} Metrics for the Next {n_months} Months")
-    plt.xlabel("Date")
-    plt.ylabel("Metrics")
+    plt.xlabel("Months Forward")
+    plt.ylabel("Metrics ($)")
     metrics = ["open", "high", "low", "close"]
     for i in range(predicted_metrics.shape[1]-1):
-        plt.plot(dates[-1] + np.arange(1, n_months +1, 30), predicted_metrics[:, i], label=metrics[i])
+        plt.plot(np.arange(1, n_months+1), predicted_metrics[:, i], label=metrics[i])
     plt.legend()
     plt.grid(True)
     plt.xticks(rotation=45)
@@ -130,28 +133,61 @@ if train:
         plot_loss_live(writer, epoch, loss.item())
 
         if epoch%100==0:
-            model.save_checkpoint(f"./LTSM_checkpoint_healthcare_{epoch}")
+            model.save_checkpoint(f"./LTSM_checkpoint_finance_{epoch}")
 
         print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.7f}')
 
-n_months = 12*3
-# model.load_checkpoint("./LTSM_300") # tech
-# model.load_checkpoint("./LTSM_checkpoint_finance_300") # finance
-model.load_checkpoint("./LTSM_checkpoint_healthcare_300")
+n_months = 12*4
 
-# predict future metrics
+def plot_metrics_ytd(ms, sector) -> None:
+    metric_names = ["open", "high", "low", "close"]
+
+    plt.figure(figsize=(10, 6))
+
+    for i in range(len(ms[1])-1):
+        plt.plot(np.arange(1, 12+1), ms[:, i], label=metric_names[i])
+    plt.legend()
+    plt.grid(True)
+    plt.xticks(rotation=45)
+
+    plt.xlabel("Past 12 Months")
+    plt.ylabel("Metric Values")
+    plt.title(f"YTD {sector} Metrics")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+dates, metrics = parse_dates_metrics("training_dates.npz", "training_metrics.npz")
+model.load_checkpoint("./LTSM_checkpoint_tech_300") # tech
 input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)
-print(input_data, input_data.shape)
+predicted_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
+print(f"Predicted metrics for the past {n_months} month(s):\n")
+plot_future_data(dates, predicted_metrics, n_months, "Tech")
+plot_metrics_ytd(metrics[-12:], "Tech")
+
+dates, metrics = parse_dates_metrics("healthcare_training_dates.npz", "healthcare_training_metrics.npz")
+model.load_checkpoint("./LTSM_checkpoint_healthcare_300")
+input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)
 predicted_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
 print(f"Predicted metrics for the past {n_months} month(s):\n")
 plot_future_data(dates, predicted_metrics, n_months, "Healthcare")
+plot_metrics_ytd(metrics[-12:], "Healthcare")
+
+dates, metrics = parse_dates_metrics("finance_training_dates.npz", "finance_training_metrics.npz")
+model.load_checkpoint("./LTSM_checkpoint_finance_300") # finance
+input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)
+predicted_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
+print(f"Predicted metrics for the past {n_months} month(s):\n")
+plot_future_data(dates, predicted_metrics, n_months, "Finance")
+plot_metrics_ytd(metrics[-12:], "Finance")
+
 
 # predict past metrics
-input_data = metrics_tensor[-22:-12].reshape(1, seq_length, input_size)
-print(input_data, input_data.shape)
-predicted_metrics = predict_metrics(model, input_data, 12, min_vals, max_vals)
-print(f"Predicted metrics for the past year:\n")
-plot_future_data(dates, predicted_metrics, n_months, "Healthcare")
+# input_data = metrics_tensor[-22:-12].reshape(1, seq_length, input_size)
+# print(input_data, input_data.shape)
+# predicted_metrics = predict_metrics(model, input_data, 12, min_vals, max_vals)
+# print(f"Predicted metrics for the past year:\n")
+# plot_future_data(dates, predicted_metrics, n_months, "Healthcare")
 
 writer.close()
 
