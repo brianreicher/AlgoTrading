@@ -4,7 +4,6 @@ __pycache__/
 *$py.class
 */runs
 *LTSM_*
-*.npz
 # C extensions
 *.so
 

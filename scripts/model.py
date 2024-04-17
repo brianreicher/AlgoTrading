@@ -43,7 +43,7 @@ for i in range(len(metrics) - seq_length):
     y.append(metrics_tensor[i+seq_length])
 X = torch.stack(X)
 y = torch.stack(y)
-print(X, y)
+
 
 class LSTM(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, output_size):
@@ -90,7 +90,7 @@ def plot_future_data(dates, predicted_metrics, n_months, sector):
     plt.ylabel("Metrics")
     metrics = ["open", "high", "low", "close"]
     for i in range(predicted_metrics.shape[1]-1):
-        plt.plot(dates[-1] + np.arange(1, n_months + 1), predicted_metrics[:, i], label=metrics[i])
+        plt.plot(dates[-1] + np.arange(1, n_months +1, 30), predicted_metrics[:, i], label=metrics[i])
     plt.legend()
     plt.grid(True)
     plt.xticks(rotation=45)
@@ -141,15 +141,17 @@ model.load_checkpoint("./LTSM_checkpoint_healthcare_300")
 
 # predict future metrics
 input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)
+print(input_data, input_data.shape)
 predicted_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
 print(f"Predicted metrics for the past {n_months} month(s):\n")
 plot_future_data(dates, predicted_metrics, n_months, "Healthcare")
 
 # predict past metrics
-input_data = metrics_tensor[-(seq_length+12):].reshape(1, seq_length, input_size)
-predicted_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
-# print(f"Predicted metrics for the past year:\n")
-# plot_future_data(dates, predicted_metrics, n_months, "Healthcare")
+input_data = metrics_tensor[-22:-12].reshape(1, seq_length, input_size)
+print(input_data, input_data.shape)
+predicted_metrics = predict_metrics(model, input_data, 12, min_vals, max_vals)
+print(f"Predicted metrics for the past year:\n")
+plot_future_data(dates, predicted_metrics, n_months, "Healthcare")
 
 writer.close()
 
