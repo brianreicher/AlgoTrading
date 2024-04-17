@@ -13,7 +13,7 @@ dates =  np.load("healthcare_training_dates.npz")["arr_0"]
 dates = np.array([np.datetime64(date) for date in dates])
 metrics = np.load("healthcare_training_metrics.npz")["arr_0"]
 
-def average_metric_arrays(dates, nested_arrays):# -> list:
+def average_metric_arrays(dates, nested_arrays)-> list:
     date_to_arrays = defaultdict(list)
 
     for date, array in zip(dates, nested_arrays):
@@ -72,18 +72,14 @@ class LSTM(nn.Module):
 def plot_loss_live(writer, epoch, loss):
     writer.add_scalar('Loss/train', loss, epoch)
 
-def predict_metrics(model, input_data, num_future_months, min_vals, max_vals, future=True):
+def predict_metrics(model, input_data, num_future_months, min_vals, max_vals) -> np.ndarray:
     predicted_metrics = []
-    if future:
-        for _ in range(num_future_months):
-            with torch.no_grad():
-                predicted = model(input_data)
-                predicted_metrics.append(predicted.squeeze().numpy() * (max_vals - min_vals) + min_vals)
-                input_data = torch.cat((input_data[:, 1:, :], predicted.unsqueeze(1)), dim=1)
-    else:
+    for _ in range(num_future_months):
         with torch.no_grad():
             predicted = model(input_data)
             predicted_metrics.append(predicted.squeeze().numpy() * (max_vals - min_vals) + min_vals)
+            input_data = torch.cat((input_data[:, 1:, :], predicted.unsqueeze(1)), dim=1)
+
     return np.array(predicted_metrics)
 
 
@@ -118,7 +114,7 @@ batch_size = 2
 dataset = TensorDataset(X, y)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-train: bool = True
+train: bool = False
 
 if train:
     for epoch in range(num_epochs):
@@ -146,17 +142,14 @@ model.load_checkpoint("./LTSM_checkpoint_healthcare_300")
 # predict future metrics
 input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)
 predicted_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
+print(f"Predicted metrics for the past {n_months} month(s):\n")
+plot_future_data(dates, predicted_metrics, n_months, "Healthcare")
 
 # predict past metrics
-n_past_months = 12
-input_data = metrics_tensor[-seq_length*10:].reshape(1, seq_length, input_size)
-predicted_past_metrics = predict_metrics(model, input_data, n_past_months, min_vals, max_vals)
-
-
-print(f"Predicted metrics for the next {n_months} month(s):\n")
-print(predicted_metrics)
-
-plot_future_data(dates, predicted_metrics, n_months, "Healthcare")
+input_data = metrics_tensor[-(seq_length+12):].reshape(1, seq_length, input_size)
+predicted_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
+# print(f"Predicted metrics for the past year:\n")
+# plot_future_data(dates, predicted_metrics, n_months, "Healthcare")
 
 writer.close()
 
