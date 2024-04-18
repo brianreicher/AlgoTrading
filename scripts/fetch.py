@@ -79,13 +79,12 @@ def calculate_directionality(metrics) -> list:
 
 
 if __name__ == "__main__":
-    # tech_stocks: list = ["MSFT", "IBM", "NVDA", "CRM", "AAPL", "GOOGL", "AMZN", "INTC", "CSCO", "ADBE"]
-    # finance_stocks: list = ["JPM", "BAC", "WFC", "GS", "C", "MS", "AXP", "USB", "BLK", "PNC"]
-    # healthcare_stocks: list = ["JNJ", "PFE", "UNH", "MRK", "ABBV", "AMGN", "LLY", "BMY", "CVS", "MDT"]
-    consumer_goods_stocks: list = ["PG", "KO", "PEP", "MO", "MCD", "NKE", "CL", "KHC", "WMT", "HD"]
-    energy_stocks: list = ["XOM", "CVX", "RDS-A", "BP", "TOT", "COP", "SLB", "EOG", "PTR", "KMI"]
+    tech_stocks: list = ["MSFT", "IBM", "NVDA", "CRM", "AAPL", "GOOGL", "AMZN", "INTC", "CSCO", "ADBE"]
+    finance_stocks: list = ["JPM", "BAC", "WFC", "GS", "C", "MS", "AXP", "USB", "BLK", "PNC"]
+    healthcare_stocks: list = ["JNJ", "PFE", "UNH", "MRK", "ABBV", "AMGN", "LLY", "BMY", "CVS", "MDT"]
 
-    tickers: dict = {"consumer_goods":consumer_goods_stocks, "energy":energy_stocks}
+
+    tickers: dict = {"tech": tech_stocks, "finance": finance_stocks, "healthcare": healthcare_stocks}
 
 
     for sector, data in tickers.items():
