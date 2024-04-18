@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 from torch.utils.data import DataLoader, TensorDataset
 from torch.utils.tensorboard import SummaryWriter
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from torchsummary import summary
 
 
 def average_metric_arrays(dates, nested_arrays)-> list:
@@ -47,7 +49,6 @@ for i in range(len(metrics) - seq_length):
     y.append(metrics_tensor[i+seq_length])
 X = torch.stack(X)
 y = torch.stack(y)
-
 
 class LSTM(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, output_size):
@@ -106,7 +107,7 @@ num_layers = 2
 output_size = 5
 model = LSTM(input_size, hidden_size, num_layers, output_size)
 
-
+#%%
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 writer = SummaryWriter()
@@ -157,54 +158,70 @@ def plot_metrics_ytd(ms, sector) -> None:
     plt.grid(True)
     plt.show()
 
+def mean_absolute_percentage_error(y_true, y_pred):
+    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+
+def validate(actual, predicted):
+    mae_past = mean_absolute_error(actual, predicted)
+    mse_past = mean_squared_error(actual, predicted)
+    rmse_past = np.sqrt(mse_past)
+    r2_past = r2_score(actual, predicted)
+    mape = mean_absolute_percentage_error(actual, predicted)
+    print("Metrics for Predicted Past YTD:")
+    print("MAE:", mae_past)
+    print("MSE:", mse_past)
+    print("RMSE:", rmse_past)
+    print("Mean Absolute Percentage Error:", mape)
+    print("R-squared:", r2_past)
+
 dates, metrics = parse_dates_metrics("training_dates.npz", "training_metrics.npz")
 min_vals = np.min(metrics, axis=0)
 max_vals = np.max(metrics, axis=0)
 model.load_checkpoint("./LTSM_checkpoint_tech_300") # tech
 input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)
-predicted_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
+predicted_future_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
 print(f"Predicted metrics for the past {n_months} month(s):\n")
-plot_future_data(dates, predicted_metrics, n_months, "Tech")
-plot_metrics_ytd(metrics[-12:], "Tech")
+plot_future_data(dates, predicted_future_metrics, n_months, "Tech")
+ytd = metrics[-12:]
+plot_metrics_ytd(ytd, "Tech")
 # predicted past YTD metrics
 input_data = metrics_tensor[-22:-12].reshape(1, seq_length, input_size)
-predicted_metrics = predict_metrics(model, input_data, 12, min_vals, max_vals)
-plot_metrics_ytd(predicted_metrics, "Tech Backtest YTD")
+predicted_past_metrics = predict_metrics(model, input_data, 12, min_vals, max_vals)
+plot_metrics_ytd(predicted_past_metrics, "Tech Backtest YTD")
+validate(ytd, predicted_past_metrics)
 
 dates, metrics = parse_dates_metrics("healthcare_training_dates.npz", "healthcare_training_metrics.npz")
 min_vals = np.min(metrics, axis=0)
 max_vals = np.max(metrics, axis=0)
 model.load_checkpoint("./LTSM_checkpoint_healthcare_300")
 input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)
-predicted_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
+predicted_future_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
 print(f"Predicted metrics for the past {n_months} month(s):\n")
-plot_future_data(dates, predicted_metrics, n_months, "Healthcare")
-plot_metrics_ytd(metrics[-12:], "Healthcare")
+plot_future_data(dates, predicted_future_metrics, n_months, "Healthcare")
+ytd = metrics[-12:]
+plot_metrics_ytd(ytd, "Healthcare")
 # predicted past YTD metrics
 input_data = metrics_tensor[-22:-12].reshape(1, seq_length, input_size)
-predicted_metrics = predict_metrics(model, input_data, 12, min_vals, max_vals)
-plot_metrics_ytd(predicted_metrics, "Healthcare Backtest YTD")
+predicted_past_metrics = predict_metrics(model, input_data, 12, min_vals, max_vals)
+plot_metrics_ytd(predicted_past_metrics, "Healthcare Backtest YTD")
+validate(ytd, predicted_past_metrics)
 
 dates, metrics = parse_dates_metrics("finance_training_dates.npz", "finance_training_metrics.npz")
 min_vals = np.min(metrics, axis=0)
 max_vals = np.max(metrics, axis=0)
 model.load_checkpoint("./LTSM_checkpoint_finance_300") # finance
 input_data = metrics_tensor[-seq_length:].reshape(1, seq_length, input_size)
-predicted_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
+# future metrics
+predicted_future_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
 print(f"Predicted metrics for the past {n_months} month(s):\n")
-plot_future_data(dates, predicted_metrics, n_months, "Finance")
-plot_metrics_ytd(metrics[-12:], "Finance")
+plot_future_data(dates, predicted_future_metrics, n_months, "Finance")
+ytd = metrics[-12:]
+plot_metrics_ytd(ytd, "Finance")
 # predicted past YTD metrics
 input_data = metrics_tensor[-22:-12].reshape(1, seq_length, input_size)
-predicted_metrics = predict_metrics(model, input_data, 12, min_vals, max_vals)
-plot_metrics_ytd(predicted_metrics, "Finance Backtest YTD")
-
-# predict past metrics
-# input_data = metrics_tensor[-22:-12].reshape(1, seq_length, input_size)
-# print(input_data, input_data.shape)
-# predicted_metrics = predict_metrics(model, input_data, 12, min_vals, max_vals)
-# print(f"Predicted metrics for the past year:\n")
-# plot_future_data(dates, predicted_metrics, n_months, "Healthcare")
+predicted_past_metrics = predict_metrics(model, input_data, 12, min_vals, max_vals)
+plot_metrics_ytd(predicted_past_metrics, "Finance Backtest YTD")
+validate(ytd, predicted_past_metrics)
 
 writer.close()
 
