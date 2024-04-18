@@ -6,6 +6,7 @@ def mean_absolute_percentage_error(y_true, y_pred):
     return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
 
 def validate(actual, predicted):
+    actual, predicted = np.array(actual), np.array(predicted)
     mae_past = mean_absolute_error(actual, predicted)
     mse_past = mean_squared_error(actual, predicted)
     rmse_past = np.sqrt(mse_past)

@@ -48,7 +48,7 @@ dates, metrics = parse_dates_metrics("finance_training_dates.npz", "finance_trai
 min_vals = np.min(metrics, axis=0)
 max_vals = np.max(metrics, axis=0)
 metrics = torch.tensor(metrics, dtype=torch.float32)
-model.load_checkpoint("./LTSM_checkpoint_finance_300") # finance
+model.load_checkpoint("./LTSM_checkpoint_finance_1000") # finance
 input_data = metrics[-seq_length:].reshape(1, seq_length, input_size)
 # future metrics
 predicted_future_metrics = predict_metrics(model, input_data, n_months, min_vals, max_vals)
